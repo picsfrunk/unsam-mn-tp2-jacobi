@@ -39,11 +39,11 @@ def ingreso_datos_manual():
     print()
 
 
-def jacobi(A, b, k):
+def jacobi(A, b, k, tolerance=0.1):
     n = len(b)
     x = np.zeros(n)  # Aproximación inicial de las soluciones
     H = np.zeros((k, n, n))  # Matriz de iteración H
-    v = np.zeros((k + 1, n))  # Vector v del método de Jacobi en cada iteración
+    v = np.zeros((k+1, n))  # Vector v del método de Jacobi en cada iteración
     norm = np.zeros(k)  # Norma de cada iteración
 
     for i in range(k):
@@ -52,10 +52,14 @@ def jacobi(A, b, k):
         else:
             H[i] = -np.linalg.inv(np.diag(np.diag(A))) @ (A - np.diag(np.diag(A)))  # Matriz de iteración de Jacobi
 
-        v[i + 1] = H[i] @ v[i] + np.linalg.inv(np.diag(np.diag(A))) @ b  # Cálculo del vector v en cada iteración
-        x = v[i + 1]  # Actualización de la aproximación de las soluciones
+        v[i+1] = H[i] @ v[i] + np.linalg.inv(np.diag(np.diag(A))) @ b  # Cálculo del vector v en cada iteración
+        x_new = v[i+1]  # Aproximación actualizada de las soluciones
 
-        norm[i] = np.linalg.norm(A @ x - b)  # Cálculo de la norma de cada iteración
+        norm[i] = np.linalg.norm(x_new - x)  # Cálculo de la norma del error en cada iteración
+        x = x_new  # Actualizar la aproximación de las soluciones
+
+        if norm[i] < tolerance:
+            break  # Detener las iteraciones si el error es menor que la tolerancia
 
     return H, norm, v
 
@@ -122,8 +126,8 @@ else:
 
 x0 = np.zeros(n)
 
-# H, norm, v = jacobi(matriz, vector, k)  # Aplicar el método de Jacobi
-H, norm, v = jacobi_2(matriz, vector, x0, tol, k)  # Aplicar el método de Jacobi
+H, norm, v = jacobi(matriz, vector, k)  # Aplicar el método de Jacobi
+# H, norm, v = jacobi_2(matriz, vector, x0, tol, k)  # Aplicar el método de Jacobi
 
 print("\nMatriz de iteración H:")
 for i in range(k):
