@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.linalg import solve
 
-MIN_VALUE = -2
-MAX_VALUE = 2
+MIN_VALUE = -10
+MAX_VALUE = 10
 
 
 # En el mismo lenguaje de programación que usaron para el mini TP 1 (preferentemente), implementar un programa
@@ -30,8 +30,8 @@ def seleccionar_ingreso_data():
 
 
 def ingreso_datos_aleatorio(n):
-    m = np.round(np.random.uniform(MIN_VALUE, MAX_VALUE, size=(n, n)), 2)
-    v = np.round(np.random.uniform(MIN_VALUE, MAX_VALUE, size=n), 2)
+    m = np.random.randint(MIN_VALUE, MAX_VALUE, size=(n, n))
+    v = np.random.randint(MIN_VALUE, MAX_VALUE, size=n)
     return m, v
 
 
@@ -59,21 +59,37 @@ def jacobi(A, b, k):
 
     return H, norm, v
 
+def jacobi_2(A,b,x0,tol,k):
+    norm = np.zeros(k)  # Norma de cada iteración
+    D = np.diag(np.diag(A))
+    LU = A - D
+    x = x0
+    H = np.zeros((k, n, n))  # Matriz de iteración H
+    for i in range(k):
+        D_inv = np.linalg.inv(D)
+        xtemp = x
+        H[i] = np.dot(D_inv, np.dot(-LU, x)) + np.dot(D_inv,b)
+        norm[i] = np.linalg.norm(x - xtemp)
+        v = H[i]
+        if norm[i] < tol:
+            return H, norm, v
+    return H, norm, v
 
-def mostrar_resultados(k, H, norm, v, matriz, vector):
-    print("\nMatriz de iteración H:")
-    for i in range(k):
-        print(f"Iteración {i + 1}:")
-        print(H[i])
-        print()
-    print("Norma de cada iteración:")
-    for i in range(k):
-        print(f"Iteración {i + 1}: {norm[i]}")
-    print("\nVector v del método de Jacobi en cada iteración:")
-    for i in range(k + 1):
-        print(f"Iteración {i}: {v[i]}")
-    e = solve(matriz, vector)
-    print("Solucion exacta", e)
+
+# def mostrar_resultados(k, H, norm, v, matriz, vector):
+#     print("\nMatriz de iteración H:")
+#     for i in range(k):
+#         print(f"Iteración {i + 1}:")
+#         print(H[i])
+#         print()
+#     print("Norma de cada iteración:")
+#     for i in range(k):
+#         print(f"Iteración {i + 1}: {norm[i]}")
+#     print("\nVector v del método de Jacobi en cada iteración:")
+#     for i in range(k + 1):
+#         print(f"Iteración {i}: {v[i]}")
+#     e = solve(matriz, vector)
+#     print("Solucion exacta", e)
 
 
 print("********************************************************")
@@ -94,6 +110,8 @@ while k <= 0:
 
 option = seleccionar_ingreso_data()
 
+tol = 1e-3
+
 if option == "A":
     print("Selecciono el modo Aleatorio")
     matriz, vector = ingreso_datos_aleatorio(n)
@@ -102,18 +120,23 @@ if option == "A":
 else:
     print("Selecciono el modo Manual")
 
-H, norm, v = jacobi(matriz, vector, k)  # Aplicar el método de Jacobi
+x0 = np.zeros(n)
 
-mostrar_resultados(k, H, norm, v, matriz, vector)
+# H, norm, v = jacobi(matriz, vector, k)  # Aplicar el método de Jacobi
+H, norm, v = jacobi_2(matriz, vector, x0, tol, k)  # Aplicar el método de Jacobi
 
-repetir = ""
-
-while repetir == "S":
-
-    repetir = input("Desea repetir el metodo Jacobi con otra cantidad de iteraciones? S/N: ")
-    # if repetir == "N":
-    #     break
-
-    while k <= 0:
-        k = int(input("Ingrese el número de iteraciones (k): "))
+print("\nMatriz de iteración H:")
+for i in range(k):
+    print(f"Iteración {i + 1}:")
+    print(H[i])
+    print()
+print("Norma de cada iteración:")
+for i in range(k):
+    print(f"Iteración {i + 1}: {norm[i]}")
+print("\nVector v del método de Jacobi en cada iteración:")
+for i in range(k + 1):
+    print(f"Iteración {i}: {v[i]}")
+e = solve(matriz, vector)
+print("Solucion exacta", e)
+# mostrar_resultados(k, H, norm, v, matriz, vector)
 
