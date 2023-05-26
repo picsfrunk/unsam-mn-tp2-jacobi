@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.linalg import solve
 
-MIN_VALUE = -10
-MAX_VALUE = 10
+MIN_VALUE = -3
+MAX_VALUE = 7
 
 
 def seleccionar_ingreso_data():
@@ -16,17 +16,41 @@ def seleccionar_ingreso_data():
     return o
 
 
+def verif_diagonal_dominante(M):
+    diagonal = np.abs(np.diag(M))  # Extraer los elementos de la diagonal principal de la matriz
+    suma_fila = np.sum(np.abs(M), axis=1)  # Sumar los valores absolutos de cada fila
+
+    # Verificar si el valor absoluto de los elementos en la diagonal principal es mayor o igual que la suma
+    # de los valores absolutos de los demás elementos en la misma fila
+    return np.all(diagonal >= suma_fila - diagonal)
+
+
 def ingreso_datos_aleatorio(n):
-    m = np.random.randint(MIN_VALUE, MAX_VALUE, size=(n, n))
-    v = np.random.randint(MIN_VALUE, MAX_VALUE, size=n)
-    return m, v
+    es_diagonal_dominante = False
+    it = 0
+    max_it = 300
+
+    while not es_diagonal_dominante and it < max_it:
+        A = np.random.randint(MIN_VALUE, MAX_VALUE, size=(n, n))
+        b = np.random.randint(MIN_VALUE, MAX_VALUE, size=n)
+        A = np.where(A == 0, 1, A)
+        es_diagonal_dominante = verif_diagonal_dominante(A)
+        it += 1
+        if it < max_it:
+            print(f"En {it} intento(s)", end="\r")
+    print()
+    if es_diagonal_dominante:
+        print("se genero una matriz con diagonal dominante")
+    else:
+        print("no se logro generar una matriz con diagonal dominante")
+    return A, b
 
 
 def ingreso_datos_manual(n):
     print()
 
 
-def ingreso_datos_fijo(n):
+def ingreso_datos_fijo():
     # Matriz de coeficientes
     A = np.array([[4, 1, -1],
                   [3, 5, 1],
@@ -37,42 +61,68 @@ def ingreso_datos_fijo(n):
     return A, b
 
 
-def jacobi(A, b, k):
-    tolerance = 1e-3
-    n = len(b)
-    x = np.zeros(n)  # Aproximación inicial de las soluciones
-    H = np.zeros((k, n, n))  # Matriz de iteración H
-    v = np.zeros((k + 1, n))  # Vector v del método de Jacobi en cada iteración
-    norm = np.zeros(k)  # Norma de cada iteración
+def jacobi(A, b, k, tol):
+    D = np.diag(np.diag(A))
+    LpU = A - D
+    n = len(A)
+    x = np.zeros(n)
+    H = []  # Se inicializa una lista H para guardar los valores de cada iteracion
+    norm = []
+
+    # Imprimir los datos iniciales del sistema de ecuaciones
+    print("Método de Jacobi - Solución de un sistema de ecuaciones lineales")
+    print("----------------------------------------------------------------")
+    print("Matriz de coeficientes (A):")
+    print(np.round(A, 6))
+    print("\nVector de términos independientes (b):")
+    print(np.round(b, 6))
 
     for i in range(k):
-        if i == 0:
-            H[i] = np.diag(np.diag(A))  # Diagonal de la matriz A como primera matriz de iteración
-        else:
-            H[i] = -np.linalg.inv(np.diag(np.diag(A))) @ (A - np.diag(np.diag(A)))  # Matriz de iteración de Jacobi
+        D_inv = np.linalg.inv(D)
+        x_temp = x
+        e = 1
 
-        v[i + 1] = H[i] @ v[i] + np.linalg.inv(np.diag(np.diag(A))) @ b  # Cálculo del vector v en cada iteración
-        x_new = v[i + 1]  # Aproximación actualizada de las soluciones
+        x = np.dot(D_inv, np.dot(-LpU, x_temp)) + np.dot(D_inv, b)
+        H.append(x)
 
-        norm[i] = np.linalg.norm(x_new - x)  # Cálculo de la norma del error en cada iteración
-        x = x_new  # Actualizar la aproximación de las soluciones
+        e = np.linalg.norm(x - x_temp)
+        norm.append(e)
 
-        if norm[i] < tolerance:
-            break  # Detener las iteraciones si el error es menor que la tolerancia
+        if i == k - 1:
+            message = f"Se llego al maximo de {k} iteraciones, lamentablemente no se logra converger a un resultado"
 
-    return H, norm, v
+        if e < tol:
+            message = f"Se logro converger en un resultado con sólo {i} iteracion(es)"
+            break
+    return H, norm, x, message
 
 
-def mostrar_resultados(H, norm, v):
-    for i in range(len(H)):
-        print("\nMatriz de iteración H:")
-        print(f"Iteración {i + 1}:")
-        print(H[i])
-        print()
-        print("Norma de cada iteración:")
-        print(f"Iteración {i + 1}: {norm[i]}")
-
-    print(f"Solucion Jacobi:\n", v)
+def mostrar_resultados(H, norm, v, message, tol, e, n):
+    # exp_round = int(np.floor(np.log10(np.abs(tol))))
+    exp_round = 6
+    print("------------------------------ Emision de Resultados ------------------------------")
+    print(message)
+    print("Valores aproximados de las incógnitas obtenidas por método de Jacobi:")
+    for i in range(n):
+        print(f" x{i+1} = {np.round(v[i], exp_round)}", end="\t")
+    print(f"\nCon un error absoluto de {norm[-1]}")
+    print("\nSolucion exacta con solve():")
+    for i in range(n):
+        print(f" x{i+1} = {np.round(e[i], exp_round)}", end="\t")
+    print("\n")
+    print("Matrices de iteración obtenidas")
+    for i in range(len(norm)):
+        # print("\n")
+        print("==================================================================================")
+        print(f"Aproximación de las soluciones en iteración {i + 1}:")
+        for j in range(n):
+            print(f" x{j+1} = {np.round(H[i][j], exp_round)}", end="\t")
+        print("\n")
+        if i != 0:
+            print("Norma: ", np.round(norm[i], exp_round))
+    print("...")
+    print("Proceso de emisión de resultados finalizado")
+    print("-----------------------------------------------------------------------------------")
 
 
 print("********************************************************")
@@ -82,35 +132,36 @@ print("* DNI: 32956059                                        *")
 print("********************************************************")
 
 print("\nComenzamos!\n")
-n = 0
-while n < 2:
-    n = int(input("Ingrese una dimension (n) mayor a 2 para la matriz de (n x n): "))
-A = np.zeros((n, n))
-b = np.zeros(n)
-k = 0
-while k <= 0:
-    k = int(input("Ingrese el número de iteraciones (k): "))
 
 option = seleccionar_ingreso_data()
+n = 0
 
 if option == 1:
     print("Selecciono el modo Aleatorio")
+    while n < 1:
+        n = int(input("Ingrese una dimension (n) para la matriz de (n x n):"))
+    A = np.zeros((n, n))
+    b = np.zeros(n)
     A, b = ingreso_datos_aleatorio(n)
+
 elif option == 2:
     print("Selecciono el modo Manual")
+
 else:
-    print("Selecciono el modo Fijo")
-    A, b = ingreso_datos_fijo(n)
+    print("Selecciono trabajar con una matriz preestablecida")
+    A, b = ingreso_datos_fijo()
+    n = len(b)
 
-print("La matriz es:\n", A)
-print("El vector es:\n", b)
+k = 0
+while k <= 0:
+    k = int(input("Ingrese el número de iteraciones (k):"))
 
-H, norm, v = jacobi(A, b, k)  # Aplicar el método de Jacobi
+tol = 1e-4
+print(f"Error absoluto definido en x < {tol}")
 
-mostrar_resultados(H, norm, v)
-
-print("Solucion exacta con solve():\n", solve(A, b))
-
+H, norm, v, message = jacobi(A, b, k, tol)  # Aplicar el método de Jacobi
+solve_soluction = solve(A, b)
+mostrar_resultados(H, norm, v, message, tol, solve_soluction, n)
 
 # En el mismo lenguaje de programación que usaron para el mini TP 1 (preferentemente), implementar un programa
 # o script que lea un número natural n >= 1, una matriz de números reales A de n x n, un vector b de n números
