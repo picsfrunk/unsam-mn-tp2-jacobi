@@ -32,6 +32,22 @@ def seleccionar_ingreso_data():
     return o
 
 
+def ingresar_tolerancia():
+    t = -1
+    print(f"Ingrese el valor de precisión de decimales deseados del 0 a 9")
+    print("Nota: a mayor precisión se requerirán mayor cantidad de iteraciones")
+    print("Ejemplos:")
+    print("0 -> 0 (Precisión Baja)")
+    print("1 -> 0.1")
+    print("2 -> 0.01")
+    print("3 -> 0.001")
+    print(".....")
+    print("9 -> 1e-9 (Precisión Alta)")
+    while not (0 <= t < 10):
+        t = ingresar_entero("Opción: ")
+    return float(1 / (10 ** t))
+
+
 def verif_diagonal_dominante(M):
     diagonal = np.abs(np.diag(M))  # Extraer los elementos de la diagonal principal de la matriz
     suma_fila = np.sum(np.abs(M), axis=1)  # Sumar los valores absolutos de cada fila
@@ -76,7 +92,6 @@ def ingreso_datos_aleatorio(n):
 
 
 def ingreso_datos_manual(n):
-
     print("Selecciono el modo de ingreso manual")
 
     ingreso = "N"
@@ -131,13 +146,13 @@ def jacobi(A, b, k, tol):
 
     v = np.zeros(n)  # v será el vector solución
 
-    redondeo_decimales = abs(int(math.log10(tol))) + 1
+    redondeo_decimales = abs(int(math.log10(tol)))
 
     H = []  # Se inicializa una lista para guardar los valores de cada iteracion
     norm = []  # Se inicializa una lista para guardar el valor de la norma en cada iteración
     # En ambas listas el índice será el numero de iteración
 
-    message = ""  # esta funcion ademas de devolver resultados se diseñó para que recolecte un mensaje como string
+    msg = ""  # esta funcion ademas de devolver resultados se diseñó para que recolecte un mensaje como string
     # para saber si se logro converger en un resultado o se llegó a la cantidad máxima de iteraciones dadas
 
     # Imprimir los datos iniciales del sistema de ecuaciones
@@ -148,15 +163,15 @@ def jacobi(A, b, k, tol):
     for i in range(len(A)):
         print('\t\t\t\t\t\t', end='\t')
         for j in range(len(A)):
-            print(np.round(A[i][j], redondeo_decimales), end='\t')
+            print(A[i][j], end='\t')
         print()
     print("\nVector de términos independientes (b) ingresado:")
     print('\t\t\t\t', end='\t')
     for j in range(len(b)):
-        print(f" x{j + 1} = {np.round(b[j], redondeo_decimales)}", end="\t")
+        print(f" x{j + 1} = {b[j]}", end="\t")
     print()
     print()
-    print(f"Valor de tolerancia definido: {np.round(tol, redondeo_decimales)}")
+    print(f"Valor de tolerancia definido: {round(tol, redondeo_decimales)}")
     print()
 
     for i in range(k):
@@ -171,25 +186,25 @@ def jacobi(A, b, k, tol):
         norm.append(e)
 
         if i == k - 1:
-            message = f"Lamentablemente no se logra converger a un resultado con\n" \
+            msg = f"Lamentablemente no se logra converger a un resultado con\n" \
                       f"la tolerancia definida de {tol} en {k} iteraciones"
 
         if e < tol:
-            message = f"Se logró converger en un resultado con sólo {i + 1} de {k} iteraciones"
-            return H, norm, v, message
+            msg = f"Se logró converger en un resultado con sólo {i + 1} de {k} iteraciones"
+            return H, norm, v, msg
 
-    return H, norm, v, message
+    return H, norm, v, msg
 
 
-# Funcion mostrar_resultados:
-# Recibira:
-# H -> Lista de vectores resultados temporales
-# norm -> lista de valores de la norma en cada iteracion
-# v -> el vector resultado que se llego a obtener
-# message -> el mensaje devuelto por la funcion jacobi()
-# tol -> el valore de tolerancia o error abs seteado para calcular en cuantos decimales se formatearan los valores
-# e -> la solucion exacta para mostrar
 def mostrar_resultados(H, norm, v, message, tol, A, b):
+    # Funcion mostrar_resultados:
+    # Recibira:
+    # H -> Lista de vectores resultados temporales
+    # norm -> lista de valores de la norma en cada iteracion
+    # v -> el vector resultado que se llego a obtener
+    # message -> el mensaje devuelto por la funcion jacobi()
+    # tol -> el valore de tolerancia o error abs seteado para calcular en cuantos decimales se formatearan los valores
+    # e -> la solucion exacta para mostrar
     redondeo_decimales = abs(int(math.log10(tol)))
     n = len(v)
     e = np.linalg.solve(A, b)
@@ -198,22 +213,21 @@ def mostrar_resultados(H, norm, v, message, tol, A, b):
     print("\n\t\t\t* * * * * * Vectores resultado obtenidos * * * * * *\t\t\t")
     print("Aproximación de las soluciones")
     for i in range(len(norm)):
-        # print("--------------------------------------------------------------------------------")
         print(f"Iteración {i + 1}")
         for j in range(n):
-            print(f" x{j + 1} = {np.round(H[i][j], redondeo_decimales)}", end="\t")
+            print(f" x{j + 1} = {round(H[i][j], redondeo_decimales)}", end="\t")
         if i != 0:
-            print("\nNorma: ", np.round(norm[i], redondeo_decimales), end="\t")
+            print("\nNorma: ", round(norm[i], redondeo_decimales), end="\t")
         print("\n--------------------------------------------------------------------------------")
     print()
     print("* * * * * * Valores aproximados de las incógnitas obtenidas por método de Jacobi * * * * * *")
     print(message)
     print("\nEl vector de resultados es:")
     for i in range(n):
-        print(f" x{i + 1} = {np.round(v[i], redondeo_decimales)}", end="\t")
+        print(f" x{i + 1} = {round(v[i], redondeo_decimales)}", end="\t")
     print("\nSolucion exacta con solve():")
     for i in range(n):
-        print(f" x{i + 1} = {np.round(e[i], redondeo_decimales)}", end="\t")
+        print(f" x{i + 1} = {round(e[i], redondeo_decimales)}", end="\t")
     dif_prom = 0
     for i in range(n):
         dif_prom += e[i] - v[i]
@@ -236,7 +250,6 @@ print("********************************************************")
 print("\nComenzamos!\n")
 
 again = True
-
 while again:
     n = 0
 
@@ -260,31 +273,16 @@ while again:
         A, b = ingreso_datos_fijo()
         n = len(b)
 
-    set_tol = -1
-    print(f"Ingrese el valor de precisión de decimales deseados 0...9")
-    print("Nota: a mayor precisión se requerirán mayor cantidad de iteraciones")
-    print("Ejemplos:")
-    print("0 -> 0 (Precisión Baja)")
-    print("1 -> 0.1")
-    print("2 -> 0.01")
-    print("3 -> 0.001")
-    print(".....")
-    print("9 -> 1e-9 (Precisión Alta)")
-
-    while not (0 <= set_tol < 10):
-        set_tol = ingresar_entero("Opción: ")
-
-    tol = float(1 / (10 ** set_tol))
+    tol = ingresar_tolerancia()
 
     k = 0
-    while k <= 0:
+    while not k > 0:
         k = ingresar_entero("Ingrese el número de iteraciones (k): ")
 
     H, norm, v, message = jacobi(A, b, k, tol)  # Aplica el método de Jacobi con los datos ingresados
     mostrar_resultados(H, norm, v, message, tol, A, b)
 
-    print()
-    opc = str(input("Ingrese 'ENTER' para volver a empezar o 'X' para salir del programa").upper())
+    opc = str(input("\nIngrese 'ENTER' para volver a empezar o 'X' para salir del programa").upper())
     if opc == "X":
         again = False
 
