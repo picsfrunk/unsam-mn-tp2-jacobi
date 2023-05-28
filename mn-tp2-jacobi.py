@@ -1,35 +1,6 @@
 import numpy as np
 
 
-# Menu del programa
-def menu():
-    n = 0
-    option = seleccionar_ingreso_data()
-    print()
-    if 0 < option <= 2:
-        while n < 1:
-            n = ingresar_entero("Ingrese una dimension (n) para la matriz de (n x n) para trabajar:")
-        A = np.zeros((n, n))
-        b = np.zeros(n)
-
-        if option == 1:
-            A, b = ingreso_datos_aleatorio(n)
-
-        elif option == 2:
-            A, b = ingreso_datos_manual(n)
-
-    else:
-        print("Selecciono trabajar con una matriz preestablecida de 3 x 3")
-        A, b = ingreso_datos_fijo()
-        n = len(b)
-    tol = ingresar_tolerancia()
-    k = 0
-    while not k > 0:
-        k = ingresar_entero("Ingrese el número de iteraciones (k): ")
-    H, norm, v, message = jacobi(A, b, k, tol)  # Aplica el método de Jacobi con los datos ingresados
-    mostrar_resultados(H, norm, v, message, tol, A, b)
-
-
 # Funciones auxiliares
 def ingresar_entero(mensaje):
     while True:
@@ -76,13 +47,17 @@ def ingresar_tolerancia():
     return float(1 / (10 ** t))
 
 
-def verif_diagonal_dominante(M):
-    diagonal = np.abs(np.diag(M))  # Extraer los elementos de la diagonal principal de la matriz
-    suma_fila = np.sum(np.abs(M), axis=1)  # Sumar los valores absolutos de cada fila
+def es_matriz_con_diagonal_dominante(m):
+    diagonal = np.abs(np.diag(m))  # Extraer los elementos de la diagonal principal de la matriz
+    suma_fila = np.sum(np.abs(m), axis=1)  # Sumar los valores absolutos de cada fila
 
     # Verificar si el valor absoluto de los elementos en la diagonal principal es mayor o igual que la suma
     # de los valores absolutos de los demás elementos en la misma fila
     return np.all(diagonal >= suma_fila - diagonal)
+
+
+def es_matriz_singular(m):
+    return np.linalg.det(m) != 0
 
 
 def ingreso_datos_aleatorio(n):
@@ -94,20 +69,27 @@ def ingreso_datos_aleatorio(n):
     print(f"se generará, en lo posible, una matriz con diagonal dominante en {i_maxima} intentos como máximo.")
     print()
 
-    MIN_VALUE = -5
-    MAX_VALUE = 5
+    MIN_VALUE = -10
+    MAX_VALUE = 10
     print(f"Valores mínimos y máximos seteados por defecto en {MIN_VALUE} y {MAX_VALUE} respectivamente")
     if input("Ingrese 'ENTER' para mantenerlos o 'R' para redefinir").upper() == "R":
-        MIN_VALUE = ingresar_entero("Ingrese un valor entero para el valor MÍNIMO del generador aleatorio")
-        MAX_VALUE = ingresar_entero("Ingrese un valor entero para el valor MÁXIMO del generador aleatorio")
+        it_minmax = 0
+        ok_minmax = False
+        while not ok_minmax:
+            if it_minmax > 0:
+                print("Error: el valor mínimo debe ser menor al máximo!")
+            MIN_VALUE = ingresar_entero("Ingrese un valor entero para el valor MÍNIMO del generador aleatorio")
+            MAX_VALUE = ingresar_entero("Ingrese un valor entero para el valor MÁXIMO del generador aleatorio")
+            it_minmax += 1
+            ok_minmax = MIN_VALUE < MAX_VALUE
 
     i = 0
     es_diagonal_dominante = False
     while not es_diagonal_dominante and i < i_maxima:
         A = np.random.randint(MIN_VALUE, MAX_VALUE, size=(n, n))
         b = np.random.randint(MIN_VALUE, MAX_VALUE, size=n)
-        A = np.where(A == 0, MIN_VALUE, A)
-        es_diagonal_dominante = verif_diagonal_dominante(A)
+        A = np.where(A == 0, MAX_VALUE, A)
+        es_diagonal_dominante = es_matriz_con_diagonal_dominante(A)
         i += 1
         if i < i_maxima:
             print(f"En {i} intento(s)", end="\r")
@@ -121,13 +103,14 @@ def ingreso_datos_aleatorio(n):
 
 def ingreso_datos_manual(n):
     print("Selecciono el modo de ingreso manual")
-
     ingreso = "N"
 
     while ingreso == "N":
+        ingreso = ""
         A = np.zeros((n, n))
-        print("Ingreso de elementos de la matriz A:")
-        print("Nota: no se permite ingresar ningún valor en 0")
+        print("\nIngreso de elementos de la matriz A:")
+        print("Notas: no se permite ingresar ningún valor en 0. Además luego de ingresar la matriz se verificara\n"
+              "que su determinante no sea 0")
         for i in range(n):
             for j in range(n):
                 while A[i, j] == 0:
@@ -135,20 +118,24 @@ def ingreso_datos_manual(n):
                     if A[i, j] == 0:
                         print("DEBE INGRESAR UN VALOR DISTINTO DE CERO!\nIntente nuevamente!")
 
-        ingreso = ""
-        if not verif_diagonal_dominante(A):
-            print("\n*** Atención: la matriz ingresada no contiene una diagonal dominante ***")
-            print("*** Es posible que el método Jacobi no converga en un resultado ***\n")
+        # Validacion de matriz
+        if not es_matriz_singular(A):
+            print("*** Error ***\nNo se puede continuar con la matriz ingresada debido a que el determinante es 0")
+            print("Ingrese la matriz nuevamente")
+            ingreso = "N"
         else:
-            print("Bien! La matriz ingresada tiene diagonal dominante, es ideal para iterar en Jacobi")
-        print("La matriz ingresada es:\n")
-        for i in range(len(A)):
-            print('\t\t\t\t\t\t', end='\t')
-            for j in range(len(A)):
-                print(A[i][j], end='\t')
-            print()
-        print("Presiones ENTER para continuar o 'N' para ingresar nuevamente")
-        ingreso = str(input()).upper()
+            if not es_matriz_con_diagonal_dominante(A):
+                print("\n*** Atención: la matriz ingresada no contiene una diagonal dominante ***")
+                print("*** Es posible que el método Jacobi no converga en un resultado ***\n")
+            else:
+                print("\nLa matriz ingresada tiene diagonal dominante, es ideal para iterar en Jacobi\n")
+
+        # Muestra matriz ingresada y permite reingresar
+        print("La matriz ingresada es:")
+        print(A, "\n")
+        if ingreso != "N":
+            print("Presiones ENTER para continuar o 'N' para ingresar nuevamente")
+            ingreso = str(input()).upper()
 
     b = np.zeros(n)
     print("\nIngreso de elementos del vector b:")
@@ -175,21 +162,25 @@ def jacobi(A, b, k, tol):
     print("-------- Método de Jacobi - Solución de un sistema de ecuaciones lineales -----------------")
     print("-------------------------------------------------------------------------------------------")
     print("Matriz (A) ingresada:")
-    for i in range(len(A)):
-        print('\t\t\t\t\t\t', end='\t')
-        for j in range(len(A)):
-            print(A[i][j], end='\t')
-        print()
-    print("\nVector de términos independientes (b) ingresado:")
-    print('\t\t\t\t', end='\t')
+    print(A, "\n")
+    print("Vector de términos independientes (b) ingresado:")
     for j in range(len(b)):
         print(f" x{j + 1} = {b[j]}", end="\t")
     print()
     print()
     print(f"Valor de tolerancia definido: {tol}")
-    print()
+    input("\nPresione ENTER para comenzar las iteraciones\n")
+
     # Asignacion e inicializacion de variables a utilizar para iterar en el proceso
     # de estimacion de los resultados de v
+
+    # Inicializacion de variables a retornar
+    H = []  # Se inicializa una lista para guardar los valores de cada iteracion
+    norm = []  # Se inicializa una lista para guardar el valor de la norma en cada iteración
+    # En ambas listas el índice será el numero de iteración
+    v = np.zeros(len(b))  # v será el vector solución
+    msg = ""  # esta funcion ademas de devolver resultados se diseñó para que recolecte un mensaje como string
+    # para saber si se logro converger en un resultado o se llegó a la cantidad máxima de iteraciones dadas
 
     # Juego de datos para utilizar en la fórmula de Jacobi
     D = np.diag(np.diag(A))  # D sera la matriz diagonal de A, la cual contendra unicamente los elementos
@@ -198,32 +189,25 @@ def jacobi(A, b, k, tol):
     # para luego utilizar en las operaciones como -LpU y trabajar en cada iteracion
     D_inv = np.linalg.inv(D)  # Genero la matriz diagonal inversa
 
-    # Inicializacion de variables a retornar
-    H = []  # Se inicializa una lista para guardar los valores de cada iteracion
-    norm = []  # Se inicializa una lista para guardar el valor de la norma en cada iteración
-    # En ambas listas el índice será el numero de iteración
-    v = np.zeros(len(b))  # v será el vector solución
-    msg = ""  # esta funcion ademas de devolver resultados se diseñó para que recolecte un mensaje como string
-    # para saber si se logro convergir en un resultado o se llegó a la cantidad máxima de iteraciones dadas
-
     for i in range(k):
         x_temp = v
         e = 1
 
         # Calculo con la formula de Jacobi la solucion temporal
         v = np.dot(D_inv, np.dot(-LpU, x_temp)) + np.dot(D_inv, b)
-        # Guardo
+        # Guardo en la lista
         H.append(v)
 
+        # Calculo norma y guardo en la lista
         e = np.linalg.norm(v - x_temp)
         norm.append(e)
 
         if i == k - 1:
-            msg = f"Lamentablemente no se logra convergir a un resultado dentro\n" \
+            msg = f"Lamentablemente no se logra converger a un resultado dentro\n" \
                   f"de la tolerancia definida en {tol} en {k} iteraciones"
 
         if e < tol:
-            msg = f"Se logró convergir en un resultado con sólo {i + 1} de {k} iteraciones"
+            msg = f"Se logró converger en un resultado con sólo {i + 1} de {k} iteraciones"
             return H, norm, v, msg
 
     return H, norm, v, msg
@@ -272,12 +256,42 @@ def mostrar_resultados(H, norm, v, message, tol, A, b):
     print("===========================================================================================")
 
 
+# Menu del programa
+def menu():
+    n = 0
+    option = seleccionar_ingreso_data()
+    print()
+    if 0 < option <= 2:
+        while n < 1:
+            n = ingresar_entero("Ingrese una dimension (n) para la matriz de (n x n) para trabajar:")
+        A = np.zeros((n, n))
+        b = np.zeros(n)
+
+        if option == 1:
+            A, b = ingreso_datos_aleatorio(n)
+
+        elif option == 2:
+            A, b = ingreso_datos_manual(n)
+
+    else:
+        print("Selecciono trabajar con una matriz preestablecida de 3 x 3")
+        A, b = ingreso_datos_fijo()
+        n = len(b)
+    tol = ingresar_tolerancia()
+    k = 0
+    while not k > 0:
+        k = ingresar_entero("Ingrese el número de iteraciones (k): ")
+    H, norm, v, message = jacobi(A, b, k, tol)  # Aplica el método de Jacobi con los datos ingresados
+    mostrar_resultados(H, norm, v, message, tol, A, b)
+
+
 print("********************************************************")
 print("* Universidad Nacional de San Martin                   *")
 print("* Escuela de Ciencia y Tecnologia                      *")
-print("* Trabajo Practico 2 - Metodos Numericos               *")
+print("* Trabajo Practico 2 - Métodos Numericos               *")
 print("* Alumno: Nava, Alejandro Daniel                       *")
 print("* DNI: 32956059                                        *")
+print("* Carrera: TPI                                         *")
 print("********************************************************")
 
 print("\nComenzamos!\n")
@@ -293,16 +307,3 @@ print("********************** Trabajo Practico No.2 Metodos Numericos Finalizado
 print("==================================================================================================")
 print("Muchas gracias por utilizar!")
 print("Atte. Alejandro Daniel Nava")
-
-# En el mismo lenguaje de programación que usaron para el mini TP 1 (preferentemente), implementar un programa
-# o script que lea un número natural n >= 1, una matriz de números reales A de n x n, un vector b de n números
-# reales y un número natural k >= 0. El programa deberá luego mostrar la matriz de iteración H, su norma y el
-# vector v del método de Jacobi con el fin de buscar una solución aproximada del sistema de ecuaciones lineales Ax = b,
-# y deberá hacer k iteraciones del método para este sistema lineal mostrando los vectores que resulten
-# en los distintos pasos. Se informará cualquier error o eventualidad que impida calcular lo pedido.
-# La entrada y la salida del programa podrán ser las estándares o bien archivos, a elección de Uds.
-# (En forma opcional, comparar la solución numérica obtenida con la solución mediante algún método exacto,
-# para lo cual se permite tomar este último de un módulo o biblioteca de métodos numéricos. Si se usa R,
-# por ejemplo, se puede directamente usar Solve(A, b).)
-# Entrega: código comentado y ejemplos capturados.
-# (Esta tarea queda como opcional.)
