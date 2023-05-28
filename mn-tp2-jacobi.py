@@ -1,6 +1,6 @@
 import numpy as np
 
-
+"""
 # ********************************************************
 # * Universidad Nacional de San Martin                   *
 # * Escuela de Ciencia y Tecnologia                      *
@@ -10,45 +10,52 @@ import numpy as np
 # * Carrera: TPI                                         *
 # ********************************************************
 
+* El programa comienza mostrando un menú inicial en el que el usuario puede elegir entre tres opciones para ingresar
+  los datos del sistema de ecuaciones:
+
+   * Llenar la matriz con valores aleatorios.
+   * Ingresar manualmente la matriz y el vector de términos independientes.
+   * Trabajar con una matriz predefinida de 3x3 y un vector de n=3.
+   * O salir del menu principal
+
+* Después de seleccionar la opción de ingreso de datos, se solicita al usuario ingresar la tolerancia deseada. La
+  tolerancia determina la precisión de los decimales en el resultado y afecta la cantidad de iteraciones necesarias
+  para converger a una solución.
+
+* A continuación, se le pide al usuario ingresar el número máximo de iteraciones permitidas.
+
+* Dependiendo de la opción seleccionada, el programa generará una matriz con valores aleatorios, solicitará al usuario
+  que ingrese manualmente la matriz y el vector de términos independientes, o utilizará una matriz predefinida.
+
+* Antes de comenzar las iteraciones del método de Jacobi, se muestran los datos iniciales del sistema de ecuaciones,
+  incluyendo:
+   * La matriz ingresada.
+   * El vector de términos independientes.
+   * La tolerancia establecida.
+
+* A continuación, se ejecuta el método de Jacobi para estimar las soluciones del sistema de ecuaciones. Se realiza un
+  bucle iterativo hasta que se cumpla alguna de las siguientes condiciones:
+   * Se alcanza la cantidad máxima de iteraciones especificada.
+   * La diferencia entre dos iteraciones consecutivas es menor que la tolerancia establecida.
+
+* Después de las iteraciones, se muestran los resultados obtenidos. Esto incluye:
+   * Los vectores resultado obtenidos en cada iteración.
+   * La norma correspondiente a cada iteración.
+   * El vector solución final obtenido por el método de Jacobi.
+   * El vector solución exacta calculado utilizando el método linalg.solve() de NumPy.
+
+* El programa también verifica si la diferencia entre el vector solución exacta y el vector solución obtenido por el
+  método de Jacobi es igual a cero. Si es así, se muestra un mensaje indicando que los resultados coinciden.
+
+* Después de mostrar los resultados, se ofrece al usuario la opción de ejecutar el programa nuevamente o salir.
+
+El programa realiza algunas validaciones, como verificar si la matriz es singular (determinante igual a cero) y si la
+matriz tiene una diagonal dominante. Además, se permite al usuario definir los valores mínimo y máximo para la
+generación de valores aleatorios en la matriz.
 """
-1. El programa comienza mostrando un menú inicial en el que el usuario puede elegir entre tres opciones para ingresar los datos del sistema de ecuaciones:
 
-   - Llenar la matriz con valores aleatorios.
-   - Ingresar manualmente la matriz y el vector de términos independientes.
-   - Trabajar con una matriz predefinida de 3x3 y un vector de n=3.
 
-2. Después de seleccionar la opción de ingreso de datos, se solicita al usuario ingresar la tolerancia deseada. La tolerancia determina la precisión de los decimales en el resultado y afecta la cantidad de iteraciones necesarias para converger a una solución.
-
-3. A continuación, se le pide al usuario ingresar el número máximo de iteraciones permitidas.
-
-4. Dependiendo de la opción seleccionada, el programa generará una matriz con valores aleatorios, solicitará al usuario que ingrese manualmente la matriz y el vector de términos independientes, o utilizará una matriz predefinida.
-
-5. Antes de comenzar las iteraciones del método de Jacobi, se muestran los datos iniciales del sistema de ecuaciones, incluyendo:
-   - La matriz ingresada.
-   - El vector de términos independientes.
-   - La tolerancia establecida.
-
-6. A continuación, se ejecuta el método de Jacobi para estimar las soluciones del sistema de ecuaciones. Se realiza un bucle iterativo hasta que se cumpla alguna de las siguientes condiciones:
-   - Se alcanza la cantidad máxima de iteraciones especificada.
-   - La diferencia entre dos iteraciones consecutivas es menor que la tolerancia establecida.
-
-7. Después de las iteraciones, se muestran los resultados obtenidos. Esto incluye:
-   - Los vectores resultado obtenidos en cada iteración.
-   - La norma correspondiente a cada iteración.
-   - El vector solución final obtenido por el método de Jacobi.
-   - El vector solución exacta calculado utilizando el método `np.linalg.solve()` de NumPy.
-
-8. El programa también verifica si la diferencia entre el vector solución exacta y el vector solución obtenido por el método de Jacobi es igual a cero. Si es así, se muestra un mensaje indicando que los resultados coinciden.
-
-9. Después de mostrar los resultados, se ofrece al usuario la opción de ejecutar el programa nuevamente o salir.
-
-El programa realiza algunas validaciones, como:
-   - Verificar si la matriz es singular (determinante igual a cero).
-   - Verificar si la matriz tiene una diagonal dominante.
-   - Permitir al usuario definir los valores mínimo y máximo para la generación de valores aleatorios en la matriz.
-"""
-
-# Funciones auxiliares
+# Funciones auxiliares para validaciones
 def ingresar_entero(mensaje):
     while True:
         try:
@@ -67,13 +74,28 @@ def ingresar_decimal(mensaje):
             print("Error: Debes ingresar un número decimal válido.")
 
 
+def es_matriz_con_diagonal_dominante(m):
+    diagonal = np.abs(np.diag(m))  # Extraer los elementos de la diagonal principal de la matriz
+    suma_fila = np.sum(np.abs(m), axis=1)  # Sumar los valores absolutos de cada fila
+
+    # Verificar si el valor absoluto de los elementos en la diagonal principal es mayor o igual que la suma
+    # de los valores absolutos de los demás elementos en la misma fila
+    return np.all(diagonal >= suma_fila - diagonal)
+
+
+def es_matriz_singular(m):
+    return np.linalg.det(m) != 0
+
+
+# Funciones para ingreso de datos 
 def seleccionar_ingreso_data():
-    o = 0
-    while not 0 < o < 4:
+    o = -1
+    while not 0 <= o <= 3:
         o = ingresar_entero("Ingrese:\n"
                             "1: para llenar la matriz con valores aleatorios\n"
                             "2: para ingresar de manera manual\n"
                             "3: para trabajar con una matriz predefinida de 3x3 y un vector de n=3\n"
+                            "0: Salir del menú\n"
                             "Seleccione una opcion: ")
     return o
 
@@ -92,19 +114,6 @@ def ingresar_tolerancia():
     while not (0 <= t < 10):
         t = ingresar_entero("Opción: ")
     return float(1 / (10 ** t))
-
-
-def es_matriz_con_diagonal_dominante(m):
-    diagonal = np.abs(np.diag(m))  # Extraer los elementos de la diagonal principal de la matriz
-    suma_fila = np.sum(np.abs(m), axis=1)  # Sumar los valores absolutos de cada fila
-
-    # Verificar si el valor absoluto de los elementos en la diagonal principal es mayor o igual que la suma
-    # de los valores absolutos de los demás elementos en la misma fila
-    return np.all(diagonal >= suma_fila - diagonal)
-
-
-def es_matriz_singular(m):
-    return np.linalg.det(m) != 0
 
 
 def ingreso_datos_aleatorio(n):
@@ -203,6 +212,7 @@ def ingreso_datos_fijo():
     return A, b
 
 
+# Funcion para calcular con método Jacobi
 def jacobi(A, b, k, tol):
     # Imprimir los datos iniciales del sistema de ecuaciones
     print("Matriz (A) ingresada:")
@@ -301,14 +311,14 @@ def mostrar_resultados(H, norm, v, message, tol, A, b):
     print("-------------------------------------------------------------------------------------")
 
 
-# Menu del programa
+# Menu principal del programa
 def menu():
     n = 0
     option = seleccionar_ingreso_data()
     print()
     if 0 < option <= 2:
-        while n < 1:
-            n = ingresar_entero("Ingrese una dimension (n) para la matriz de (n x n) para trabajar:")
+        while n < 2:
+            n = ingresar_entero("Ingrese una dimension (n>1) para la matriz de (n x n) para trabajar:")
         A = np.zeros((n, n))
         b = np.zeros(n)
 
@@ -318,10 +328,12 @@ def menu():
         elif option == 2:
             A, b = ingreso_datos_manual(n)
 
-    else:
+    elif option == 3:
         print("Selecciono trabajar con una matriz preestablecida de 3 x 3")
         A, b = ingreso_datos_fijo()
         n = len(b)
+    else:
+        return 0
     tol = ingresar_tolerancia()
     k = 0
     while not k > 0:
@@ -347,6 +359,8 @@ while again:
     if opc == "X":
         again = False
 
+print()
+print("==================================================================================================")
 print("********************** Trabajo Practico No.2 Metodos Numericos Finalizado ************************")
 print("==================================================================================================")
 print("\nMuchas gracias por utilizar!")
