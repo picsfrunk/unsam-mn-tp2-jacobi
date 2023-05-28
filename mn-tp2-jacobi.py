@@ -1,14 +1,14 @@
 import numpy as np
 
 """
-# ********************************************************
-# * Universidad Nacional de San Martin                   *
-# * Escuela de Ciencia y Tecnologia                      *
-# * Trabajo Practico 2 - Métodos Numericos               *
-# * Alumno: Nava, Alejandro Daniel                       *
-# * DNI: 32956059                                        *
-# * Carrera: TPI                                         *
-# ********************************************************
+********************************************************
+* Universidad Nacional de San Martin                   *
+* Escuela de Ciencia y Tecnologia                      *
+* Trabajo Practico 2 - Métodos Numericos               *
+* Alumno: Nava, Alejandro Daniel                       *
+* DNI: 32956059                                        *
+* Carrera: TPI                                         *
+********************************************************
 
 * El programa comienza mostrando un menú inicial en el que el usuario puede elegir entre tres opciones para ingresar
   los datos del sistema de ecuaciones:
@@ -16,7 +16,6 @@ import numpy as np
    * Llenar la matriz con valores aleatorios.
    * Ingresar manualmente la matriz y el vector de términos independientes.
    * Trabajar con una matriz predefinida de 3x3 y un vector de n=3.
-   * O volver al menu principal
 
 * Después de seleccionar la opción de ingreso de datos, se solicita al usuario ingresar la tolerancia deseada. La
   tolerancia determina la precisión de los decimales en el resultado y afecta la cantidad de iteraciones necesarias
@@ -36,8 +35,8 @@ import numpy as np
 * Modo manual
   * Al ingresar la matriz se verifican 2 condiciones:
     1. Que la matriz sea de diagonal dominante. Este caso no es excluyente pero se informa al usuario.
-    2. Que el determinante de la matriz sea distinto de cero. En caso de determinante 0 se obliga al usuario
-       volver a ingresar la matriz.
+    2. Que la matriz no sea singular. Se evalúa calculando que el determinante sea distinto de 0. En ese caso
+       se obliga al usuario a volver a ingresar la matriz.
 
 * Antes de comenzar las iteraciones del método de Jacobi, se muestran los datos iniciales del sistema de ecuaciones,
   incluyendo:
@@ -60,6 +59,9 @@ import numpy as np
   método de Jacobi es igual a cero. Si es así, se muestra un mensaje indicando que los resultados coinciden.
 
 * Después de mostrar los resultados, se ofrece al usuario la opción de ejecutar el programa nuevamente o salir.
+
+* El programa valida todas las entradas de datos, es decir, que se verifica siempre que se solicite un número decimal,
+  un entero o una opción; que el dato ingresado sea válido para que no arrastre un error al resto del proceso.
 
 """
 
