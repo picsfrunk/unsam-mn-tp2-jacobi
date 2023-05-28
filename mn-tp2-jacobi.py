@@ -1,6 +1,35 @@
 import numpy as np
 
 
+# Menu del programa
+def menu():
+    n = 0
+    option = seleccionar_ingreso_data()
+    print()
+    if 0 < option <= 2:
+        while n < 1:
+            n = ingresar_entero("Ingrese una dimension (n) para la matriz de (n x n) para trabajar:")
+        A = np.zeros((n, n))
+        b = np.zeros(n)
+
+        if option == 1:
+            A, b = ingreso_datos_aleatorio(n)
+
+        elif option == 2:
+            A, b = ingreso_datos_manual(n)
+
+    else:
+        print("Selecciono trabajar con una matriz preestablecida de 3 x 3")
+        A, b = ingreso_datos_fijo()
+        n = len(b)
+    tol = ingresar_tolerancia()
+    k = 0
+    while not k > 0:
+        k = ingresar_entero("Ingrese el número de iteraciones (k): ")
+    H, norm, v, message = jacobi(A, b, k, tol)  # Aplica el método de Jacobi con los datos ingresados
+    mostrar_resultados(H, norm, v, message, tol, A, b)
+
+
 # Funciones auxiliares
 def ingresar_entero(mensaje):
     while True:
@@ -167,13 +196,13 @@ def jacobi(A, b, k, tol):
     # diagonal de A y el resto ceros
     LpU = A - D  # dada la fórmula de Jacobi puedo redefinir L + U = A - D
     # para luego utilizar en las operaciones como -LpU y trabajar en cada iteracion
-    D_inv = np.linalg.inv(D) # Genero la matriz diagonal inversa
+    D_inv = np.linalg.inv(D)  # Genero la matriz diagonal inversa
 
     # Inicializacion de variables a retornar
     H = []  # Se inicializa una lista para guardar los valores de cada iteracion
     norm = []  # Se inicializa una lista para guardar el valor de la norma en cada iteración
     # En ambas listas el índice será el numero de iteración
-    v = np.zeros(n)  # v será el vector solución
+    v = np.zeros(len(b))  # v será el vector solución
     msg = ""  # esta funcion ademas de devolver resultados se diseñó para que recolecte un mensaje como string
     # para saber si se logro convergir en un resultado o se llegó a la cantidad máxima de iteraciones dadas
 
@@ -191,7 +220,7 @@ def jacobi(A, b, k, tol):
 
         if i == k - 1:
             msg = f"Lamentablemente no se logra convergir a un resultado dentro\n" \
-                      f"de la tolerancia definida en {tol} en {k} iteraciones"
+                  f"de la tolerancia definida en {tol} en {k} iteraciones"
 
         if e < tol:
             msg = f"Se logró convergir en un resultado con sólo {i + 1} de {k} iteraciones"
@@ -209,7 +238,7 @@ def mostrar_resultados(H, norm, v, message, tol, A, b):
     # message -> el mensaje devuelto por la funcion jacobi()
     # tol -> el valore de tolerancia o error abs seteado para calcular en cuantos decimales se formatearan los valores
     # e -> la solucion exacta para mostrar
-    redondeo_decimales = abs(int(np.log10(tol))) # n decimales para usar en redondeo para mostrar resultados
+    redondeo_decimales = abs(int(np.log10(tol)))  # n decimales para usar en redondeo para mostrar resultados
     n = len(v)
     e = np.linalg.solve(A, b)
     print("================================ Emision de Resultados ===================================")
@@ -255,37 +284,7 @@ print("\nComenzamos!\n")
 
 again = True
 while again:
-    n = 0
-
-    option = seleccionar_ingreso_data()
-    print()
-
-    if 0 < option <= 2:
-        while n < 1:
-            n = ingresar_entero("Ingrese una dimension (n) para la matriz de (n x n) para trabajar:")
-        A = np.zeros((n, n))
-        b = np.zeros(n)
-
-        if option == 1:
-            A, b = ingreso_datos_aleatorio(n)
-
-        elif option == 2:
-            A, b = ingreso_datos_manual(n)
-
-    else:
-        print("Selecciono trabajar con una matriz preestablecida de 3 x 3")
-        A, b = ingreso_datos_fijo()
-        n = len(b)
-
-    tol = ingresar_tolerancia()
-
-    k = 0
-    while not k > 0:
-        k = ingresar_entero("Ingrese el número de iteraciones (k): ")
-
-    H, norm, v, message = jacobi(A, b, k, tol)  # Aplica el método de Jacobi con los datos ingresados
-    mostrar_resultados(H, norm, v, message, tol, A, b)
-
+    menu()
     opc = str(input("\nIngrese 'ENTER' para volver a empezar o 'X' para salir del programa").upper())
     if opc == "X":
         again = False
