@@ -16,7 +16,7 @@ import numpy as np
    * Llenar la matriz con valores aleatorios.
    * Ingresar manualmente la matriz y el vector de términos independientes.
    * Trabajar con una matriz predefinida de 3x3 y un vector de n=3.
-   * O salir del menu principal
+   * O volver al menu principal
 
 * Después de seleccionar la opción de ingreso de datos, se solicita al usuario ingresar la tolerancia deseada. La
   tolerancia determina la precisión de los decimales en el resultado y afecta la cantidad de iteraciones necesarias
@@ -26,6 +26,18 @@ import numpy as np
 
 * Dependiendo de la opción seleccionada, el programa generará una matriz con valores aleatorios, solicitará al usuario
   que ingrese manualmente la matriz y el vector de términos independientes, o utilizará una matriz predefinida.
+  
+* Modo aleatorio
+  * Se permite al usuario definir los valores mínimos y máximos para la generación de valores en la matriz. 
+    En caso de no querer redefinir se utilizan valores por defecto de -10 y 10.
+  * El programa está diseñado para que en lo posible se genere una matriz con diagonal dominante. Para ello realiza
+    una cantidad máxima de intentos y en caso de no lograrlo se informa al usuario.
+    
+* Modo manual
+  * Al ingresar la matriz se verifican 2 condiciones:
+    1. Que la matriz sea de diagonal dominante. Este caso no es excluyente pero se informa al usuario.
+    2. Que el determinante de la matriz sea distinto de cero. En caso de determinante 0 se obliga al usuario
+       volver a ingresar la matriz.
 
 * Antes de comenzar las iteraciones del método de Jacobi, se muestran los datos iniciales del sistema de ecuaciones,
   incluyendo:
@@ -49,9 +61,6 @@ import numpy as np
 
 * Después de mostrar los resultados, se ofrece al usuario la opción de ejecutar el programa nuevamente o salir.
 
-El programa realiza algunas validaciones, como verificar si la matriz es singular (determinante igual a cero) y si la
-matriz tiene una diagonal dominante. Además, se permite al usuario definir los valores mínimo y máximo para la
-generación de valores aleatorios en la matriz.
 """
 
 
