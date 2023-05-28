@@ -1,4 +1,3 @@
-import math
 import numpy as np
 
 
@@ -111,10 +110,16 @@ def ingreso_datos_manual(n):
         if not verif_diagonal_dominante(A):
             print("\n*** Atención: la matriz ingresada no contiene una diagonal dominante ***")
             print("*** Es posible que el método Jacobi no converga en un resultado ***\n")
-            print("Presiones ENTER para continuar o 'N' para ingresar nuevamente")
-            ingreso = str(input()).upper()
         else:
             print("Bien! La matriz ingresada tiene diagonal dominante, es ideal para iterar en Jacobi")
+        print("La matriz ingresada es:\n")
+        for i in range(len(A)):
+            print('\t\t\t\t\t\t', end='\t')
+            for j in range(len(A)):
+                print(A[i][j], end='\t')
+            print()
+        print("Presiones ENTER para continuar o 'N' para ingresar nuevamente")
+        ingreso = str(input()).upper()
 
     b = np.zeros(n)
     print("\nIngreso de elementos del vector b:")
@@ -136,25 +141,6 @@ def ingreso_datos_fijo():
 
 
 def jacobi(A, b, k, tol):
-    # Asignacion e inicializacion de variables a utilizar para iterar en el proceso
-    # de estimacion de los resultados de v
-    D = np.diag(np.diag(A))  # D sera la matriz diagonal de A, la cual contendra unicamente los elementos
-    # diagonal de A y el resto ceros
-
-    LpU = A - D  # dada la fórmula de Jacobi puedo redefinir L + U = A - D
-    # para luego utilizar en las operaciones como -LpU y trabajar en cada iteracion
-
-    v = np.zeros(n)  # v será el vector solución
-
-    redondeo_decimales = abs(int(math.log10(tol)))
-
-    H = []  # Se inicializa una lista para guardar los valores de cada iteracion
-    norm = []  # Se inicializa una lista para guardar el valor de la norma en cada iteración
-    # En ambas listas el índice será el numero de iteración
-
-    msg = ""  # esta funcion ademas de devolver resultados se diseñó para que recolecte un mensaje como string
-    # para saber si se logro converger en un resultado o se llegó a la cantidad máxima de iteraciones dadas
-
     # Imprimir los datos iniciales del sistema de ecuaciones
     print("===========================================================================================")
     print("-------- Método de Jacobi - Solución de un sistema de ecuaciones lineales -----------------")
@@ -171,26 +157,44 @@ def jacobi(A, b, k, tol):
         print(f" x{j + 1} = {b[j]}", end="\t")
     print()
     print()
-    print(f"Valor de tolerancia definido: {round(tol, redondeo_decimales)}")
+    print(f"Valor de tolerancia definido: {tol}")
     print()
+    # Asignacion e inicializacion de variables a utilizar para iterar en el proceso
+    # de estimacion de los resultados de v
+
+    # Juego de datos para utilizar en la fórmula de Jacobi
+    D = np.diag(np.diag(A))  # D sera la matriz diagonal de A, la cual contendra unicamente los elementos
+    # diagonal de A y el resto ceros
+    LpU = A - D  # dada la fórmula de Jacobi puedo redefinir L + U = A - D
+    # para luego utilizar en las operaciones como -LpU y trabajar en cada iteracion
+    D_inv = np.linalg.inv(D) # Genero la matriz diagonal inversa
+
+    # Inicializacion de variables a retornar
+    H = []  # Se inicializa una lista para guardar los valores de cada iteracion
+    norm = []  # Se inicializa una lista para guardar el valor de la norma en cada iteración
+    # En ambas listas el índice será el numero de iteración
+    v = np.zeros(n)  # v será el vector solución
+    msg = ""  # esta funcion ademas de devolver resultados se diseñó para que recolecte un mensaje como string
+    # para saber si se logro convergir en un resultado o se llegó a la cantidad máxima de iteraciones dadas
 
     for i in range(k):
-        D_inv = np.linalg.inv(D)
         x_temp = v
         e = 1
 
+        # Calculo con la formula de Jacobi la solucion temporal
         v = np.dot(D_inv, np.dot(-LpU, x_temp)) + np.dot(D_inv, b)
+        # Guardo
         H.append(v)
 
         e = np.linalg.norm(v - x_temp)
         norm.append(e)
 
         if i == k - 1:
-            msg = f"Lamentablemente no se logra converger a un resultado con\n" \
-                      f"la tolerancia definida de {tol} en {k} iteraciones"
+            msg = f"Lamentablemente no se logra convergir a un resultado dentro\n" \
+                      f"de la tolerancia definida en {tol} en {k} iteraciones"
 
         if e < tol:
-            msg = f"Se logró converger en un resultado con sólo {i + 1} de {k} iteraciones"
+            msg = f"Se logró convergir en un resultado con sólo {i + 1} de {k} iteraciones"
             return H, norm, v, msg
 
     return H, norm, v, msg
@@ -205,7 +209,7 @@ def mostrar_resultados(H, norm, v, message, tol, A, b):
     # message -> el mensaje devuelto por la funcion jacobi()
     # tol -> el valore de tolerancia o error abs seteado para calcular en cuantos decimales se formatearan los valores
     # e -> la solucion exacta para mostrar
-    redondeo_decimales = abs(int(math.log10(tol)))
+    redondeo_decimales = abs(int(np.log10(tol))) # n decimales para usar en redondeo para mostrar resultados
     n = len(v)
     e = np.linalg.solve(A, b)
     print("================================ Emision de Resultados ===================================")
